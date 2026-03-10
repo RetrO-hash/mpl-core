@@ -105,9 +105,9 @@ pub(crate) fn burn<'a>(accounts: &'a [AccountInfo<'a>], args: BurnV1Args) -> Pro
     )?;
 
     process_burn(ctx.accounts.asset, ctx.accounts.payer)?;
-    if let Some(mut collection) = collection {
+    if let (Some(mut collection), Some(collection_info)) = (collection, ctx.accounts.collection) {
         collection.decrement_size()?;
-        collection.save(ctx.accounts.collection.unwrap(), 0)?;
+        collection.save(collection_info, 0)?;
     };
     Ok(())
 }
