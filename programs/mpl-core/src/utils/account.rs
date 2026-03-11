@@ -22,13 +22,17 @@ pub(crate) fn close_program_account<'a>(
 
     // Transfer lamports from the account to the destination account.
     let dest_starting_lamports = funds_dest_account_info.lamports();
-    **funds_dest_account_info.lamports.borrow_mut() = dest_starting_lamports
+    **funds_dest_account_info.try_borrow_mut_lamports()? = dest_starting_lamports
         .checked_add(amount_to_return)
         .ok_or(MplCoreError::NumericalOverflowError)?;
-    **account_to_close_info.try_borrow_mut_lamports()? -= amount_to_return;
+
+    let mut account_lamports = account_to_close_info.try_borrow_mut_lamports()?;
+    **account_lamports = account_lamports
+        .checked_sub(amount_to_return)
+        .ok_or(MplCoreError::NumericalOverflowError)?;
 
     account_to_close_info.realloc(1, false)?;
-    account_to_close_info.data.borrow_mut()[0] = Key::Uninitialized.to_u8().unwrap();
+    account_to_close_info.try_borrow_mut_data()?[0] = Key::Uninitialized.to_u8().ok_or(MplCoreError::DeserializationError)?;
 
     Ok(())
 }
@@ -64,8 +68,15 @@ pub(crate) fn resize_or_reallocate_account<'a>(
         // return lamports to the compressor
         let lamports_diff = current_minimum_balance.saturating_sub(new_minimum_balance);
 
-        **funding_account.try_borrow_mut_lamports()? += lamports_diff;
-        **target_account.try_borrow_mut_lamports()? -= lamports_diff
+        let mut funding_lamports = funding_account.try_borrow_mut_lamports()?;
+        **funding_lamports = funding_lamports
+            .checked_add(lamports_diff)
+            .ok_or(MplCoreError::NumericalOverflowError)?;
+
+        let mut target_lamports = target_account.try_borrow_mut_lamports()?;
+        **target_lamports = target_lamports
+            .checked_sub(lamports_diff)
+            .ok_or(MplCoreError::NumericalOverflowError)?;
     }
 
     target_account.realloc(new_size, false)?;
