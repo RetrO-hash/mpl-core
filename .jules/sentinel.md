@@ -1,0 +1,4 @@
+## 2024-05-24 - [Avoid Direct Lamport/Data Mutations in Solana]
+**Vulnerability:** Direct usage of `.borrow_mut()` and unchecked arithmetic (`+=`, `-=`) on Solana `AccountInfo` fields.
+**Learning:** `RefCell` borrowing via `.borrow_mut()` will panic if the cell is already mutably borrowed elsewhere in the call stack. This crashes the Solana program ungracefully, opening a vector for griefing/DoS. Unchecked arithmetic on balances can silently wrap, causing massive financial discrepancies in release builds if overflow checks are off.
+**Prevention:** Always use safe `AccountInfo` accessors `.try_borrow_mut_lamports()?` and `.try_borrow_mut_data()?` to bubble up an error rather than panicking. Always use `.checked_add()` and `.checked_sub()` for any arithmetic involving lamports or sizes.
