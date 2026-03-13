@@ -1,0 +1,4 @@
+## 2024-05-24 - Unsafe Lamport/Data Operations and Arithmetic in Solana Programs
+**Vulnerability:** Found uses of `.borrow_mut()` on account lamports and data (`RefCell`), and raw arithmetic operators (`+=`, `-=`) for modifying lamport values in `programs/mpl-core/src/utils/account.rs`.
+**Learning:** Using `.borrow_mut()` directly can cause the Solana program to panic ungracefully if there's a double borrow. Raw arithmetic operators (`+=`, `-=`) can lead to integer overflow/underflow panics, which also act as a vector for DoS/resource exhaustion.
+**Prevention:** Always use `.try_borrow_mut_lamports()?` and `.try_borrow_mut_data()?` to safely handle `RefCell` borrows and propagate errors cleanly. Always use `.checked_add()` and `.checked_sub()` for any lamport math, coupled with an appropriate error (e.g., `.ok_or(MplCoreError::NumericalOverflowError)?`).
