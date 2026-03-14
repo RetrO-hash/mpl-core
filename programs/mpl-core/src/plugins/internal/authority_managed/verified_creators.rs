@@ -147,11 +147,13 @@ fn validate_verified_creators_as_plugin_authority(
 
     let changes = calculate_signature_changes(new_verified_creators, verified_creators)?;
 
-    for removal in changes.removed.iter() {
-        let sig = &verified_creators.unwrap().signatures[*removal as usize];
-        if sig.verified && &sig.address != authority {
-            solana_program::msg!("Verified creators: Rejected");
-            return Err(MplCoreError::InvalidPluginOperation.into());
+    if let Some(creators) = verified_creators {
+        for removal in changes.removed.iter() {
+            let sig = &creators.signatures[*removal as usize];
+            if sig.verified && &sig.address != authority {
+                solana_program::msg!("Verified creators: Rejected");
+                return Err(MplCoreError::InvalidPluginOperation.into());
+            }
         }
     }
 
