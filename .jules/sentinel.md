@@ -1,0 +1,4 @@
+## 2024-05-30 - Fix ungraceful panics from unsafe lamport math and direct borrow_mut
+**Vulnerability:** Lamport additions/subtractions in `mpl-core` using `+=` and `-=` can cause ungraceful program panics on integer overflow/underflow, acting as a potential DoS/resource exhaustion vector. Additionally, direct uses of `.borrow_mut()` on account lamports and data can cause ungraceful double-borrow panics.
+**Learning:** In Solana programs, it is critical to handle math safely, returning custom program errors when bounds are exceeded. Furthermore, RefCell accesses on AccountInfo lamports/data should be done via `try_borrow_mut_lamports()?` and `try_borrow_mut_data()?` to bubble up an error rather than panicking.
+**Prevention:** Strictly enforce `.checked_add()`, `.checked_sub()`, and `.saturating_sub()` instead of direct arithmetic operators on lamports and critical state. Always use `try_borrow_mut_lamports` and `try_borrow_mut_data`.
