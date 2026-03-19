@@ -1,0 +1,4 @@
+## 2024-11-06 - [Prevent Panics on Multiple Borrows of Solana Accounts]
+**Vulnerability:** Programs panicking due to multiple direct `.borrow_mut()` calls on Solana AccountInfo (lamports or data), leading to potential DoS or transaction failures instead of graceful error handling.
+**Learning:** Solana's `AccountInfo` uses `RefCell` for `lamports` and `data`. Directly calling `.borrow_mut()` will cause the Rust program to panic if a mutable borrow is already held. Gracefully handling this with `.try_borrow_mut_lamports()?` and `.try_borrow_mut_data()?` ensures the program fails cleanly with an error rather than ungracefully panicking.
+**Prevention:** Always use `.try_borrow_mut_lamports()?` and `.try_borrow_mut_data()?` when mutating Solana account balances or data to prevent runtime panics.
