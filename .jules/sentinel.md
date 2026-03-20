@@ -1,0 +1,4 @@
+## 2024-05-30 - Prevent lamport panics with checked arithmetic
+**Vulnerability:** Safe math was not consistently applied in `try_borrow_mut_lamports()`. Arithmetic operators `+=` and `-=` were used which can cause ungraceful program panics on underflow/overflow.
+**Learning:** `AccountInfo::try_borrow_mut_lamports()` returns an unwrapped mut reference which makes it easy to accidentally use standard operators on. Program panics return uninformative errors to the client, preventing clients from gracefully handling and displaying specific errors, and panics also can introduce minor resource exhaustion vectors.
+**Prevention:** Strictly enforce the use of `checked_add()` and `checked_sub()` in lamport manipulation and convert those results cleanly into explicit `MplCoreError::NumericalOverflowError` results using `ok_or`.
