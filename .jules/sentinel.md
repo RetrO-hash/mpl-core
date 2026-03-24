@@ -1,0 +1,4 @@
+## 2024-05-18 - Fix RefCell Borrow and Overflow Panics in `mpl-core` Account Utils
+**Vulnerability:** Unsafe RefCell borrows (`.borrow_mut()`) and basic integer assignment operators (`+=`, `-=`) on lamports / account data could cause ungraceful panics and integer overflows, leading to a Denial of Service.
+**Learning:** `try_borrow_mut_lamports` mixed with assignment operators will evaluate the right hand side first. If the RHS calculates things, it might cause panics. Furthermore, standard operators like `+=` and `-=` don't check for integer overflow and could crash the Solana program if numbers overflow, opening up a DoS vector.
+**Prevention:** Strictly utilize `.try_borrow_mut_lamports()?`, `.try_borrow_mut_data()?` for safe borrows. Strictly use `.checked_add()` and `.checked_sub()` for any operations on lamports or data rather than operators like `+=` and `-=`.
