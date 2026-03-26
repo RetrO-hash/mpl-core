@@ -67,20 +67,23 @@ fn collect_from_account(
         .checked_div(2)
         .ok_or(MplCoreError::NumericalOverflowError)?;
 
-    **dest1_info.lamports.borrow_mut() = dest1_info
+    let new_dest1_lamports = dest1_info
         .lamports()
         .checked_add(split_fee_amount)
         .ok_or(MplCoreError::NumericalOverflowError)?;
-    **dest2_info.lamports.borrow_mut() = dest2_info
-        .lamports()
-        .checked_add(
-            fee_amount
-                .checked_sub(split_fee_amount)
-                .ok_or(MplCoreError::NumericalOverflowError)?,
-        )
+    **dest1_info.try_borrow_mut_lamports()? = new_dest1_lamports;
+
+    let dest2_fee_amount = fee_amount
+        .checked_sub(split_fee_amount)
         .ok_or(MplCoreError::NumericalOverflowError)?;
 
-    **account_info.lamports.borrow_mut() = rent_amount;
+    let new_dest2_lamports = dest2_info
+        .lamports()
+        .checked_add(dest2_fee_amount)
+        .ok_or(MplCoreError::NumericalOverflowError)?;
+    **dest2_info.try_borrow_mut_lamports()? = new_dest2_lamports;
+
+    **account_info.try_borrow_mut_lamports()? = rent_amount;
 
     Ok(())
 }
