@@ -1,0 +1,4 @@
+## 2024-05-20 - Fix RefCell double borrow panic in assignment expressions
+**Vulnerability:** Double borrow panic risk due to left-to-right expression evaluation in assignment `**dest1_info.lamports.borrow_mut() = dest1_info.lamports().checked_add(...)`.
+**Learning:** Rust evaluates the left-hand side (`borrow_mut()`) before the right-hand side (`lamports()`, which uses `borrow()`). This creates overlapping mutable and immutable borrows, triggering a runtime `RefCell` panic on Solana mainnet and failing transactions.
+**Prevention:** Compute the new value entirely before invoking `.try_borrow_mut_lamports()?` to ensure the immutable borrow is dropped prior to the mutable borrow. Always avoid direct `.borrow_mut()` and use `.try_borrow_mut_lamports()?` to return a graceful `ProgramError::AccountBorrowFailed` error instead of panicking.
