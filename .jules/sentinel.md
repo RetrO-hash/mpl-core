@@ -1,0 +1,4 @@
+## 2024-11-06 - [CRITICAL] Unsafe Lamport Mutation and Ungraceful Panics
+**Vulnerability:** Found direct `**AccountInfo.lamports.borrow_mut() = ...` assignments combined with unsafe `+=` and `-=` operators on lamports in `utils/account.rs` and `processor/collect.rs`.
+**Learning:** Directly calling `.borrow_mut()` on an `AccountInfo`'s lamports causes an ungraceful program panic if the `RefCell` is already borrowed, which creates a Denial of Service (DoS) vulnerability. Furthermore, using `+=` or `-=` directly bypassing `.checked_add` and `.checked_sub` can cause integer overflow/underflow panics.
+**Prevention:** In Solana programs, strictly use `.try_borrow_mut_lamports()?` to ensure graceful errors instead of panics during double borrows. Furthermore, always calculate the new lamports value safely using checked arithmetic before assigning it to the dereferenced `try_borrow_mut_lamports()?`.
