@@ -1,0 +1,7 @@
+## 2024-05-18 - Fix Unhandled Panics and Integer Overflows in Smart Contract
+**Vulnerability:** The Solana program `mpl-core` used `borrow_mut()` directly on AccountInfo lamports/data and `.unwrap()` on Options without checking. It also mutated lamports directly instead of calculating new lamport values safely using checked arithmetic before assignment. These issues could lead to program panics (from double borrows or invalid unwraps) and potential Integer Overflow vulnerabilities, leading to Denial of Service or unauthorized funds manipulation.
+**Learning:** In Solana smart contracts, unexpected program panics can halt the entire instruction, but they should be handled gracefully by returning clean errors. RefCell double borrow panics must be avoided by using `try_borrow_mut_lamports()?`. Math operations, especially on lamports, should always be performed securely using checked arithmetic (`checked_add`, `checked_sub`) and the resulting values assigned afterwards. Also, `Option` should be safely matched using `if let Some()` instead of `.unwrap()`.
+**Prevention:**
+1. Always use `.try_borrow_mut_lamports()?` and `.try_borrow_mut_data()?` instead of `.borrow_mut()`.
+2. Extract the computation of new values to a separate statement using checked math before assigning them to mutably borrowed state.
+3. Replace `.unwrap()` with proper `Result` propagation (`ok_or()`) or `if let` matching.
