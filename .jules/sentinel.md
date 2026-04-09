@@ -1,0 +1,4 @@
+## 2024-05-30 - Fix Double-Borrow Panics & Unsafe Arithmetic
+**Vulnerability:** Double-borrow panics and unsafe arithmetic in Solana `try_borrow_mut_lamports()` assignments. Specifically, computing balances like `**account.try_borrow_mut_lamports()? += amount` caused panics due to simultaneous reading and writing on RefCells in `account.rs` and `collect.rs`.
+**Learning:** Rust evaluates the left-hand operand of an assignment first. If we calculate the right-hand side simultaneously with an account balance borrow, it causes `RefCell` borrow panics if the computation also reads from the same account. Also, `+=` and `-=` should be avoided in favor of `.checked_add` and `.checked_sub`.
+**Prevention:** Always compute the new balance using `.checked_add` and `.checked_sub` first, and only after the safe calculation is done, borrow the balance to assign the newly calculated value.
