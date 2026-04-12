@@ -1,0 +1,4 @@
+## 2024-03-01 - Prevent Solana Program Panics from Unsafe Rust Borrows & Math
+**Vulnerability:** Double `RefCell` borrowing (`**account.lamports.borrow_mut() = account.lamports().checked_add(...)`) causes deterministic program panics, allowing attackers to halt execution cheaply. Similarly, unsafe `+=` arithmetic can panic on overflow/underflow.
+**Learning:** Rust executes the left side of assignments first. By invoking `.borrow_mut()` on the left side before computing the right side (which uses `.lamports()` and reads from the same `RefCell`), a double-borrow conflict occurs, triggering a runtime panic in Solana environments.
+**Prevention:** Always compute the new value independently before assigning it. Prefer `.try_borrow_mut_lamports()?` and `.try_borrow_mut_data()?` over direct `.borrow_mut()` to return a clean program error (`ProgramError::AccountBorrowFailed`) instead of crashing the node, and replace `+=` with `checked_add().ok_or(error)?`
