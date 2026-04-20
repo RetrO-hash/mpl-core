@@ -300,7 +300,9 @@ pub(crate) fn process_create<'a>(
     if let Some(mut collection) = collection {
         collection.increment_minted()?;
         collection.increment_size()?;
-        collection.save(ctx.accounts.collection.unwrap(), 0)?;
+        let collection_account = ctx.accounts.collection
+            .ok_or(MplCoreError::MissingCollection)?;
+        collection.save(collection_account, 0)?;
     };
 
     Ok(())
