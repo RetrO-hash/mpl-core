@@ -152,10 +152,12 @@ pub(crate) fn validate_asset_permissions<'a>(
 
     // If the asset is part of a collection, the collection must be passed in and it must be correct.
     if let UpdateAuthority::Collection(collection_address) = deserialized_asset.update_authority {
-        if collection.is_none() {
+        if let Some(collection_info) = collection {
+            if collection_info.key != &collection_address {
+                return Err(MplCoreError::InvalidCollection.into());
+            }
+        } else {
             return Err(MplCoreError::MissingCollection.into());
-        } else if collection.unwrap().key != &collection_address {
-            return Err(MplCoreError::InvalidCollection.into());
         }
     } else if collection.is_some() {
         return Err(MplCoreError::InvalidCollection.into());
