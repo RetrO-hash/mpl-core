@@ -1,0 +1,4 @@
+## 2024-05-31 - [Critical] Unnecessary `unwrap` panics in account utilities and processors
+**Vulnerability:** Several instances of `.unwrap()` were used on Option types or safe math, directly or implicitly, in the `mpl-core` program (such as in `programs/mpl-core/src/utils/account.rs`, `utils/mod.rs`, and processor instructions `burn.rs` and `create.rs`).
+**Learning:** Using `.unwrap()` on Option/Result types inside Solana smart contracts can lead to ungraceful program panics and potential Denial of Service. In some cases, `collection.unwrap()` was called after checking `collection.is_none()`, which doesn't panic in that path, but using `if let Some` is fundamentally safer and the Rust standard practice.
+**Prevention:** Always use safe unwrapping methods like `if let Some(...) = ...` or proper error propagation via `?` (with `.ok_or()`) when dealing with `Option` or `Result` types inside on-chain programs.
