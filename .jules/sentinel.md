@@ -1,0 +1,4 @@
+## 2024-05-24 - Unsafe Lamport Arithmetic and RefCell Borrow Panics
+**Vulnerability:** Unsafe arithmetic operators (`+=`, `-=`) and direct `.borrow_mut()` on `lamports` fields were used in account closing and resizing logic, creating risks of ungraceful program panics due to double borrows or integer overflow/underflow.
+**Learning:** In Solana programs, direct assignment/mutation using `+=` and `-=` on `try_borrow_mut_lamports()` is risky. It lacks overflow protection and can trigger runtime `RefCell` borrow panics if the calculation reads from the same account while borrowing it mutably. Additionally, `.borrow_mut()` causes an immediate panic on double borrows instead of returning an error.
+**Prevention:** Always use `.checked_add()` and `.checked_sub()`, explicitly returning a `NumericalOverflowError` via `.ok_or()`. Compute the new values completely before performing the assignment with `.try_borrow_mut_lamports()?`.
