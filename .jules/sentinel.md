@@ -1,0 +1,4 @@
+## 2024-05-24 - [Unsafe Account Lamports Modification Panics]
+**Vulnerability:** Found direct `+=` and `-=` modification of account lamports in `programs/mpl-core/src/utils/account.rs`, as well as unsafe `.borrow_mut()` on RefCells. This can cause the Solana program to panic unexpectedly due to integer overflow/underflow or double-borrowing of RefCells.
+**Learning:** Rust evaluates operands in a way that makes direct `+=` on lamports unsafe; combined with borrow mechanics, it can cause panics. We must treat Solana account lamport adjustments defensively.
+**Prevention:** Always use safe methods like `.try_borrow_mut_lamports()?` instead of `.borrow_mut()`, and explicitly use `.checked_add()` and `.checked_sub()` for lamport arithmetic, falling back to a clean error (like `MplCoreError::NumericalOverflowError`) instead of panicking.
