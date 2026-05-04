@@ -1,0 +1,4 @@
+## 2024-05-30 - [Solana RefCell Borrow and Integer Overflow Panics]
+**Vulnerability:** Direct `borrow_mut()` on `lamports` and `data` `AccountInfo` fields, unsafe `+=` and `-=` operators on lamports, and an unhandled `to_u8().unwrap()`.
+**Learning:** In Solana, directly modifying an account's properties via `.borrow_mut()` or using raw arithmetic can result in `RefCell` panics or integer overflow/underflow panics. Additionally, nested calculations (evaluating right-hand side `try_borrow_mut_lamports()?` while left-hand side is already mutably borrowed) violate Rust's borrow rules dynamically.
+**Prevention:** Always use safe accessors like `.try_borrow_mut_lamports()?` which return an error instead of a panic, use `.checked_add()` and `.checked_sub()` for safe math, and resolve lamports to local bindings before assigning them back into a mutably borrowed account field.
