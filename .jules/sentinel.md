@@ -1,0 +1,4 @@
+## 2024-05-05 - [Fix RefCell double borrow panic in collect instruction]
+**Vulnerability:** A deterministic program panic was possible in `processor/collect.rs` due to simultaneous immutable and mutable borrowing of an account's lamports `RefCell` within a single statement (e.g., `**dest1.lamports.borrow_mut() = dest1.lamports() + ...`).
+**Learning:** Rust evaluates the left-hand side of an assignment first, obtaining the mutable borrow before evaluating the right-hand side, which attempts an immutable borrow, leading to a panic. This acts as a potential Denial of Service (DoS) vector by crashing the program unexpectedly.
+**Prevention:** Always compute the new lamports/data value into a local variable before assigning it to the mutably borrowed account field using `try_borrow_mut_lamports()?`. Avoid chaining calculations inside the assignment itself.
