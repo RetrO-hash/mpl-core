@@ -1,0 +1,4 @@
+## 2024-05-09 - [Preventing RefCell Panics and Overflows]
+**Vulnerability:** Ungraceful smart contract panics caused by multiple `RefCell::borrow_mut()` calls on the same account (duplicate account risk) and arithmetic overflows using `+=` and `-=`.
+**Learning:** Directly modifying account lamports using `borrow_mut()` paired with unsafe arithmetic operators can cause runtime panics if an attacker passes the same account for multiple fields, bringing the program down ungracefully. Rust evaluating left-side assignments first compounds this when reading from the same account.
+**Prevention:** Always use safe arithmetic operators like `checked_add` and `checked_sub`, and handle the assignment safely using `.try_borrow_mut_lamports()?` to map to custom errors, completing calculations BEFORE assignment.
