@@ -1,0 +1,4 @@
+## 2025-02-21 - [Prevent RefCell Panics from Lamport Operations]
+**Vulnerability:** Double borrow panics and unchecked arithmetic in Solana lamports mutations. Operations like `**info.lamports.borrow_mut() += lamports` calculate the right-hand value while the left-hand mutably borrows the RefCell, leading to an immediate runtime panic if the calculation involves reading the account lamports.
+**Learning:** Rust evaluates assignments left-to-right. A mutable borrow (`borrow_mut()`) on the left side of an assignment persists during the evaluation of the right side. If both sides access the same RefCell (like reading lamports to calculate an addition), it triggers a panic, bringing down the whole transaction abruptly.
+**Prevention:** Always separate the read calculation from the write. Store the new calculated value in a variable first, then assign it using `.try_borrow_mut_lamports()?` to gracefully return an error instead of a panic on failure.
