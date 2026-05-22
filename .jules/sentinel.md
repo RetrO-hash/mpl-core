@@ -1,0 +1,4 @@
+## 2024-05-18 - RefCell Double Borrow Panic & Lamport Mutability Vulnerability
+**Vulnerability:** Double `RefCell` borrows during inline lamport operations (e.g. `**account.lamports.borrow_mut() = account.lamports() + X`) and unsafe lamport arithmetic (`+=`, `-=`) causing program panics or arithmetic overflow vulnerabilities.
+**Learning:** Rust evaluates the left-hand operand of an assignment first. When `borrow_mut()` is called on the left, an inline `lamports()` read on the right triggers a double borrow panic on the `RefCell`. Additionally, direct mutations using `+=` and `-=` bypass safety checks, exposing the contract to arithmetic overflows/underflows.
+**Prevention:** Avoid inline calculations on identical accounts when using `borrow_mut`. Use `.try_borrow_mut_lamports()?` and compute the values beforehand utilizing `.checked_add()` and `.checked_sub()` instead of direct mutations with `+=` and `-=`.
