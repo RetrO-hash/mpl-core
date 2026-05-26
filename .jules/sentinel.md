@@ -1,0 +1,4 @@
+## 2024-05-26 - [Account Arithmetic Panics]
+**Vulnerability:** Solana account modifications (lamports adjustments) using `+=` and `-=` operators via `try_borrow_mut_lamports()`.
+**Learning:** Rust's standard operators lack bounds checking when compiled in standard Solana program targets unless explicitly checked. Operating directly on `AccountInfo` lamports with these operators can trigger silent runtime panics (e.g. integer underflow) that disrupt the transaction entirely without clean error propagation. Additionally, using standard math on identical borrows creates double-borrow conditions inside `RefCell` when computing and assigning at the same time.
+**Prevention:** Strictly enforce the use of `.checked_add()` and `.checked_sub()` for any lamport calculations, map potential `None` results to a clean `MplCoreError::NumericalOverflowError`, and compute new values before assigning them back to mutably borrowed variables.
