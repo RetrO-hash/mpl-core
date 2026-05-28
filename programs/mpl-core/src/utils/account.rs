@@ -22,13 +22,13 @@ pub(crate) fn close_program_account<'a>(
 
     // Transfer lamports from the account to the destination account.
     let dest_starting_lamports = funds_dest_account_info.lamports();
-    **funds_dest_account_info.lamports.borrow_mut() = dest_starting_lamports
+    **funds_dest_account_info.try_borrow_mut_lamports()? = dest_starting_lamports
         .checked_add(amount_to_return)
         .ok_or(MplCoreError::NumericalOverflowError)?;
     **account_to_close_info.try_borrow_mut_lamports()? -= amount_to_return;
 
     account_to_close_info.realloc(1, false)?;
-    account_to_close_info.data.borrow_mut()[0] = Key::Uninitialized.to_u8().unwrap();
+    account_to_close_info.try_borrow_mut_data()?[0] = Key::Uninitialized.to_u8().unwrap();
 
     Ok(())
 }
