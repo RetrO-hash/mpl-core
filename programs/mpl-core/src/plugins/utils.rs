@@ -458,7 +458,7 @@ pub fn initialize_external_plugin_adapter<'a, T: DataBlob + SolanaAccount>(
 
     if let Some(data) = appended_data {
         sol_memcpy(
-            &mut account.data.borrow_mut()[data_offset..],
+            &mut account.try_borrow_mut_data()?[data_offset..],
             data,
             data.len(),
         );
@@ -515,7 +515,7 @@ pub fn update_external_plugin_adapter_data<'a, T: DataBlob + SolanaAccount>(
     // checked arithmetic, so it will always be less than or equal to account.data_len().
     // This will fail and revert state if there is a memory violation.
     unsafe {
-        let base = account.data.borrow_mut().as_mut_ptr();
+        let base = account.try_borrow_mut_data()?.as_mut_ptr();
         sol_memmove(
             base.add(new_next_plugin_offset as usize),
             base.add(next_plugin_offset),
@@ -524,7 +524,7 @@ pub fn update_external_plugin_adapter_data<'a, T: DataBlob + SolanaAccount>(
     }
 
     sol_memcpy(
-        &mut account.data.borrow_mut()[data_offset..],
+        &mut account.try_borrow_mut_data()?[data_offset..],
         data,
         new_data_len,
     );
@@ -630,7 +630,7 @@ pub fn delete_plugin<'a, T: DataBlob>(
         // checked arithmetic, so it will always be less than or equal to account.data_len().
         // This will fail and revert state if there is a memory violation.
         unsafe {
-            let base = account.data.borrow_mut().as_mut_ptr();
+            let base = account.try_borrow_mut_data()?.as_mut_ptr();
             sol_memmove(
                 base.add(plugin_offset),
                 base.add(next_plugin_offset),
@@ -713,7 +713,7 @@ pub fn delete_external_plugin_adapter<'a, T: DataBlob>(
         // checked arithmetic, so it will always be less than or equal to account.data_len().
         // This will fail and revert state if there is a memory violation.
         unsafe {
-            let base = account.data.borrow_mut().as_mut_ptr();
+            let base = account.try_borrow_mut_data()?.as_mut_ptr();
             sol_memmove(
                 base.add(plugin_offset),
                 base.add(next_plugin_offset),

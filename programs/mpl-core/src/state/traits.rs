@@ -36,7 +36,7 @@ pub trait SolanaAccount: BorshSerialize + BorshDeserialize {
 
     /// Save the account to the given account info starting at the offset.
     fn save(&self, account: &AccountInfo, offset: usize) -> ProgramResult {
-        borsh::to_writer(&mut account.data.borrow_mut()[offset..], self).map_err(|error| {
+        borsh::to_writer(&mut account.try_borrow_mut_data()?[offset..], self).map_err(|error| {
             msg!("Error: {}", error);
             MplCoreError::SerializationError.into()
         })
