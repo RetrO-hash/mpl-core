@@ -1,0 +1,4 @@
+## 2024-05-30 - Fix RefCell Panics in Lamport Updates
+**Vulnerability:** CRITICAL - Double borrow runtime panics causing DoS/Failed Transactions. `**account.lamports.borrow_mut() = account.lamports().checked_add(...)` and similar statements evaluate the left-hand side first (taking a mutable borrow), leading to an immediate runtime panic because the right-hand side then tries to take an immutable borrow.
+**Learning:** Rust evaluates the left-hand side of assignments before the right-hand side. Directly using `.borrow_mut()` on Solana `RefCell` structures circumvents the program's ability to return a clean program error via `try_borrow_mut_lamports()`.
+**Prevention:** Always use `try_borrow_mut_lamports()?` and compute the new lamport value before attempting to assign it. e.g. `let new_val = account.lamports().checked_add(...)?; **account.try_borrow_mut_lamports()? = new_val;`
