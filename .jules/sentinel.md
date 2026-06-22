@@ -1,0 +1,4 @@
+## 2024-05-24 - Unsafe lamport modification and RefCell double-borrow panics
+**Vulnerability:** Lamports were being modified using `+=` and `-=` operators along with `borrow_mut()` which can lead to both mathematical overflow panics and `RefCell` double-borrow panics, causing Denial of Service vectors.
+**Learning:** In Solana Rust programs, `account_info.lamports.borrow_mut()` and standard operators (`+=`, `-=`) are unsafe. They bypass checked math operations leading to silent wrap-arounds or application panics and bypass the more graceful `try_borrow_mut_lamports()` which returns an error instead of panicking on double borrows.
+**Prevention:** Always use `.try_borrow_mut_lamports()?` to acquire a mutable reference to lamports, and always use `.checked_add()` and `.checked_sub()` to perform math on them, checking for numerical overflows and returning an error.
