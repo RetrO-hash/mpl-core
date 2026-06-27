@@ -1,0 +1,4 @@
+## 2024-05-30 - RefCell Double Borrow Panics
+**Vulnerability:** Lamport assignment operations in Solana using left-to-right evaluation order (e.g., `**acc.try_borrow_mut_lamports()? = acc.lamports().checked_add(...)`) cause runtime panics if they attempt to read lamports while a mutable borrow is already active on the left-hand side.
+**Learning:** This is because Rust evaluates the left-hand side first, acquiring the `RefMut`, and then evaluates the right-hand side, which attempts to acquire a `Ref`, leading to a double borrow panic. Furthermore, using `+=. or `-=` bypasses safe math operations, potentially leading to integer underflow/overflow.
+**Prevention:** Always pre-compute the new lamport balance (using `.checked_add`/`.checked_sub`) before acquiring the mutable borrow, and strictly avoid `+=` and `-=` operators on lamports.
