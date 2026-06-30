@@ -252,7 +252,7 @@ fn process_update_external_plugin_adapter<'a, T: DataBlob + SolanaAccount>(
     // checked arithmetic, so it will always be less than or equal to account.data_len().
     // This will fail and revert state if there is a memory violation.
     unsafe {
-        let base = account.data.borrow_mut().as_mut_ptr();
+        let base = account.try_borrow_mut_data()?.as_mut_ptr();
         sol_memmove(
             base.add(new_next_plugin_offset as usize),
             base.add(next_plugin_offset as usize),
