@@ -511,7 +511,7 @@ impl ExternalPluginAdapter {
 
     /// Save and serialize a plugin to an offset in the account.
     pub fn save(&self, account: &AccountInfo, offset: usize) -> ProgramResult {
-        borsh::to_writer(&mut account.data.borrow_mut()[offset..], self).map_err(|error| {
+        borsh::to_writer(&mut account.try_borrow_mut_data()?[offset..], self).map_err(|error| {
             msg!("Error: {}", error);
             MplCoreError::SerializationError.into()
         })
