@@ -1,0 +1,4 @@
+## 2024-05-18 - [Prevent Lamport Modification Panics]
+**Vulnerability:** Unsafe lamport modifications using `+=` and `-=` can cause arithmetic panics. Using `.borrow_mut()` on `lamports` and `data` RefCells directly can cause runtime double-borrow panics. Furthermore, simultaneous calculation and assignment of lamports can lead to aliased account bugs.
+**Learning:** Solana program accounts require careful lamport modification. Directly modifying `AccountInfo::lamports.borrow_mut()` can panic if the account is aliased. Safe operations like `.try_borrow_mut_lamports()?` with explicit `.checked_add()` / `.checked_sub()` prevents panics. Always use sequential read-compute-write for aliased accounts.
+**Prevention:** Use `.try_borrow_mut_lamports()?` and `.try_borrow_mut_data()?`. Avoid `+=` and `-=` for lamport arithmetic. Compute the new lamport amount completely before assigning it back.
