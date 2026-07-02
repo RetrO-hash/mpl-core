@@ -1,0 +1,4 @@
+## 2026-07-02 - RefCell Borrow Panics in Lamport Assignments
+**Vulnerability:** Left-to-right evaluation in Rust means `**info.lamports.borrow_mut() = info.lamports().checked_add(...)?` mutably borrows before immutably borrowing, causing a deterministic `RefCell` double-borrow panic at runtime. Also, unsafe `+=` and `-=` operators on lamports can cause ungraceful panics instead of bubbling errors.
+**Learning:** Rust's assignment statements evaluate the LHS (the borrow) before the RHS (the value computation). If the RHS reads from the same `RefCell` as the LHS mutably borrows, it will panic. Using `try_borrow_mut_lamports()` and separating the read and compute steps sequentially prevents this DoS vector.
+**Prevention:** Strictly enforce a read-compute-write sequence for lamports, always use `try_borrow_mut_lamports()` over `.borrow_mut()`, and use `.checked_add()` and `.checked_sub()` instead of `+=` and `-=`.
