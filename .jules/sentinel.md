@@ -1,0 +1,4 @@
+## 2024-07-08 - Unsafe Arithmetic and RefCell Panics on Lamport Transfers
+**Vulnerability:** Use of `.borrow_mut()` and unsafe arithmetic `+=`, `-=` causing potential double borrow panics and numerical overflow panics.
+**Learning:** Rust evaluates the left-hand side of an assignment first, leading to a RefCell double-borrow panic if the right side reads the same data via `.lamports()`. Furthermore, Solana programs must strictly use `.checked_add()` and `.checked_sub()` instead of `+=` and `-=` to prevent ungraceful panics due to numerical overflow.
+**Prevention:** Always separate calculation from assignment for RefCell contents in Solana accounts, use `.try_borrow_mut_lamports()?` and `.try_borrow_mut_data()?` instead of `.borrow_mut()`, and strictly use checked arithmetic operations mapped to specific errors for modifying lamports.
