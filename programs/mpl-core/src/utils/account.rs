@@ -22,13 +22,19 @@ pub(crate) fn close_program_account<'a>(
 
     // Transfer lamports from the account to the destination account.
     let dest_starting_lamports = funds_dest_account_info.lamports();
-    **funds_dest_account_info.lamports.borrow_mut() = dest_starting_lamports
+    let dest_new_lamports = dest_starting_lamports
         .checked_add(amount_to_return)
         .ok_or(MplCoreError::NumericalOverflowError)?;
-    **account_to_close_info.try_borrow_mut_lamports()? -= amount_to_return;
+    **funds_dest_account_info.try_borrow_mut_lamports()? = dest_new_lamports;
+
+    let account_starting_lamports = account_to_close_info.lamports();
+    let account_new_lamports = account_starting_lamports
+        .checked_sub(amount_to_return)
+        .ok_or(MplCoreError::NumericalOverflowError)?;
+    **account_to_close_info.try_borrow_mut_lamports()? = account_new_lamports;
 
     account_to_close_info.realloc(1, false)?;
-    account_to_close_info.data.borrow_mut()[0] = Key::Uninitialized.to_u8().unwrap();
+    account_to_close_info.try_borrow_mut_data()?[0] = Key::Uninitialized.to_u8().unwrap();
 
     Ok(())
 }
@@ -64,8 +70,17 @@ pub(crate) fn resize_or_reallocate_account<'a>(
         // return lamports to the compressor
         let lamports_diff = current_minimum_balance.saturating_sub(new_minimum_balance);
 
-        **funding_account.try_borrow_mut_lamports()? += lamports_diff;
-        **target_account.try_borrow_mut_lamports()? -= lamports_diff
+        let funding_starting_lamports = funding_account.lamports();
+        let funding_new_lamports = funding_starting_lamports
+            .checked_add(lamports_diff)
+            .ok_or(MplCoreError::NumericalOverflowError)?;
+        **funding_account.try_borrow_mut_lamports()? = funding_new_lamports;
+
+        let target_starting_lamports = target_account.lamports();
+        let target_new_lamports = target_starting_lamports
+            .checked_sub(lamports_diff)
+            .ok_or(MplCoreError::NumericalOverflowError)?;
+        **target_account.try_borrow_mut_lamports()? = target_new_lamports;
     }
 
     target_account.realloc(new_size, false)?;
