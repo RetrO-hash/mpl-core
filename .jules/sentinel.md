@@ -1,0 +1,4 @@
+## 2024-05-24 - [Fix panics on double mutable lamports borrow]
+**Vulnerability:** Double mutable borrows on account lamports and runtime panic on unwrap.
+**Learning:** Using `**account_info.lamports.borrow_mut() = new_lamports` when there are multiple aliases or multiple mutable borrowers to the `RefCell` in solana lamports will cause the smart contract to ungracefully panic, causing transactions to unexpectedly abort on failure without an explicit error and could create DoS vulnerabilities.
+**Prevention:** In solana program when reading and modifying lamports, do not use `borrow_mut()` directly on the field. Instead use `try_borrow_mut_lamports()?` to ensure you properly handle the case where it is already borrowed mutably. Also, read all existing lamport amounts first before modifying multiple accounts in order to prevent unexpected borrow rules violations.
